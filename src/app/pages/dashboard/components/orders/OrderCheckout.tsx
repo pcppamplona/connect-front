@@ -1,111 +1,84 @@
-"use client";
-
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { useCheckoutFlow } from "@/hooks/useCheckoutFlow";
+import { toast } from "sonner";
 
 export function OrderCheckout() {
+  const {
+    step,
+    order,
+    handleCreateOrder,
+    handleSimulatePayment,
+    setStep,
+  } = useCheckoutFlow();
+
   const [form, setForm] = useState({
-    name: "",
-    cpf: "",
+    nome: "",
     email: "",
-    phone: "",
+    telefone: "",
+    cpf: "",
+    endereco: "",
+    produto: "Assinatura de Programa Fitness",
+    valor: "40.00",
   });
+
+  function updateField(key: string, value: string) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  useEffect(() => {
+    if (step === "paid") {
+      toast.success("Recebemos seu pagamento! Obrigado por comprar conosco!");
+    }
+  }, [step]);
 
   return (
     <div className="flex flex-col gap-6 w-full">
+      
+      {step === "form" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Dados do Cliente</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <Input placeholder="Nome" value={form.nome} onChange={(e) => updateField("nome", e.target.value)} />
+            <Input placeholder="CPF" value={form.cpf} onChange={(e) => updateField("cpf", e.target.value)} />
+            <Input placeholder="Email" value={form.email} onChange={(e) => updateField("email", e.target.value)} />
+            <Input placeholder="Telefone" value={form.telefone} onChange={(e) => updateField("telefone", e.target.value)} />
+            <Input placeholder="Endereço" value={form.endereco} onChange={(e) => updateField("endereco", e.target.value)} />
+            <Input placeholder="Produto" value={form.produto} onChange={(e) => updateField("produto", e.target.value)} />
+            <Input placeholder="Valor" value={form.valor} onChange={(e) => updateField("valor", e.target.value)} />
+            <Button onClick={() => handleCreateOrder(form)}>Avançar para pagamento</Button>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Título */}
-      <h1 className="text-3xl font-extrabold">
-        Checkout JP MASTER DIGITAL LTDA
-      </h1>
-
-      {/* DADOS PESSOAIS */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Dados pessoais</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Para confirmar sua compra preencha os campos
-          </p>
-        </CardHeader>
-
-        <CardContent className="flex flex-col gap-4">
-
-          <div>
-            <label className="font-medium text-sm">Nome completo</label>
-            <Input
-              placeholder="Seu nome completo"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
+      {step === "qr" && order && (
+        <Card className="p-6 flex flex-col items-center gap-4">
+          <h2 className="text-xl font-bold">Pagamento via PIX</h2>
+          <img
+            src={order.brCodeBase64}
+            alt="QR Code PIX"
+            className="rounded-md shadow-md border p-2 bg-white"
+            width={250}
+            height={250}
+          />
+          <p className="text-2xl font-bold text-green-700">R$ {order.valor}</p>
+          <div className="flex gap-3 mt-4">
+            <Button variant="outline" onClick={() => setStep("form")}>Voltar</Button>
+            <Button onClick={handleSimulatePayment}>Simular pagamento</Button>
           </div>
+        </Card>
+      )}
 
-          <div>
-            <label className="font-medium text-sm">CPF</label>
-            <Input
-              placeholder="000.000.000-00"
-              value={form.cpf}
-              onChange={(e) => setForm({ ...form, cpf: e.target.value })}
-            />
-            <p className="text-xs text-muted-foreground">
-              Não é possível alterar o CPF
-            </p>
-          </div>
-
-          <div>
-            <label className="font-medium text-sm">Seu melhor e-mail</label>
-            <Input
-              placeholder="email@exemplo.com"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="font-medium text-sm">Número de telefone</label>
-            <Input
-              placeholder="(00) 90000-0000"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            />
-          </div>
-
-        </CardContent>
-      </Card>
-
-      {/* FORMA DE PAGAMENTO */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Forma de Pagamento</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Selecione a melhor forma de pagar
-          </p>
-        </CardHeader>
-
-        <CardContent className="flex flex-col gap-4">
-
-          {/* PIX */}
-          <div className="w-full border rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-green-50">
-            <div className="flex items-center gap-3">
-              <span className="text-green-600 font-semibold">◆ Pix</span>
-              <span className="text-sm text-muted-foreground">
-                O pagamento será aprovado em instantes.
-              </span>
-            </div>
-            <span className="text-green-600 text-lg">✓</span>
-          </div>
-
-          {/* Botão */}
-          <Button className="bg-green-500 hover:bg-green-600 text-white w-full">
-            Realizar pagamento
-          </Button>
-
-          <p className="text-xs text-muted-foreground">
-            Escolha o método de pagamento *
-          </p>
-        </CardContent>
-      </Card>
+      {step === "paid" && (
+        <Card className="p-6 bg-green-100 border-green-300">
+          <h2 className="text-2xl font-bold text-green-800">🎉 Recebemos seu pagamento!</h2>
+          <p className="text-green-700 mt-2">Obrigado! Seu pedido foi confirmado com sucesso.</p>
+        </Card>
+      )}
     </div>
   );
 }

@@ -12,6 +12,15 @@ export function useCreateOrder() {
   });
 }
 
+export function useSimulateOrder() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post<OrderResponse>(`/orders/simulate/${id}`);
+      return data;
+    },
+  });
+}
+
 export function useCheckOrder(id?: string) {
   return useQuery({
     queryKey: ["order-check", id],
@@ -20,16 +29,6 @@ export function useCheckOrder(id?: string) {
       return data;
     },
     enabled: !!id,
-    refetchInterval: 5000, 
-  });
-}
-
-
-export function useSimulateOrder() {
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { data } = await api.post(`/orders/simulate/${id}`);
-      return data;
-    },
+    refetchInterval: 5000,
   });
 }
